@@ -1059,26 +1059,27 @@ async def ydver_cmd(ctx, target: discord.Member = None, amount: str = None, *, r
         if amount_num <= 0:
             raise ValueError
     except ValueError:
-        return await ctx.reply("❌ Geçerli bir miktar girin (pozitif sayı).")
+        return await ctx.reply("❌ Geçerli bir miktar girin (pozitif tam sayı).")
 
     nick = target.display_name
+    # Hem 16M€ hem 16.5M€ formatını destekliyor
     match = re.search(r"(\d+(?:\.\d+)?)M€", nick)
     if not match:
-        return await ctx.reply(f"❌ **{nick}** kullanıcısının isminde değer formatı bulunamadı (örn: `1M€`).")
+        return await ctx.reply(f"❌ **{nick}** kullanıcısının isminde değer formatı bulunamadı (örn: `16M€` veya `16.5M€`).")
 
-    current = float(match.group(1))
+    current = int(float(match.group(1)))  
     new_val = current + amount_num
-    new_nick = nick.replace(match.group(0), f"{new_val}M€")
+    new_value_str = f"{new_val}M€"
 
     try:
-        await target.edit(nick=new_nick)
+        await target.edit(nick=nick.replace(match.group(0), new_value_str))
     except Exception:
         return await ctx.reply("❌ Kullanıcının nickini değiştiremedim.")
 
     embed = discord.Embed(title="⚽ Değer Güncellendi", color=0x00B300)
     embed.add_field(name="👤 Oyuncu", value=target.mention, inline=True)
     embed.add_field(name="📊 Eski Değer", value=f"{current}M€", inline=True)
-    embed.add_field(name="📈 Yeni Değer", value=f"{new_val}M€", inline=True)
+    embed.add_field(name="📈 Yeni Değer", value=new_value_str, inline=True)
     embed.add_field(name="➕ Artış", value=f"+{amount_num}M€", inline=True)
     embed.add_field(name="📝 Sebep", value=reason, inline=True)
     embed.add_field(name="👮 Yetkili", value=ctx.author.mention, inline=True)
@@ -1088,7 +1089,6 @@ async def ydver_cmd(ctx, target: discord.Member = None, amount: str = None, *, r
     log_ch = ctx.guild.get_channel(CHANNELS["DEGER_LOG"])
     if log_ch:
         await log_ch.send(embed=embed)
-
 
 @bot.command(name="mute")
 async def mute_cmd(ctx, target: discord.Member = None, duration_str: str = None, *, reason="Sebep belirtilmedi"):
