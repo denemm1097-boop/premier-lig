@@ -795,67 +795,43 @@ async def ant_cmd(ctx):
     import time
     COOLDOWN_MS = 60 * 60 * 1000
     MAX_SESSIONS = 10
-
     if ctx.channel.id != CHANNELS["ANTRENMAN"]:
         return await ctx.reply(f"❌ Bu komutu yalnızca <#{CHANNELS['ANTRENMAN']}> kanalında kullanabilirsin.")
     if not has_role(ctx.author, "FUTBOLCU"):
         return await ctx.reply("❌ Bu komutu kullanmak için **Futbolcu** rolüne sahip olmalısın.")
-
     training = load_data("training.json")
     now = int(time.time() * 1000)
     uid = str(ctx.author.id)
-
     if uid not in training:
         training[uid] = {"count": 0, "lastUsed": 0}
-
     ud = training[uid]
     elapsed = now - ud["lastUsed"]
-
     if ud["lastUsed"] > 0 and elapsed < COOLDOWN_MS:
         remaining = COOLDOWN_MS - elapsed
         mins = (remaining + 59_999) // 60_000
         return await ctx.reply(f"⏱️ Antrenman için **{mins} dakika** daha beklemelisin.")
-
-    # Antrenman sayını artır
     ud["count"] += 1
     ud["lastUsed"] = now
-
     if ud["count"] > MAX_SESSIONS:
         ud["count"] = 1
-
     save_data("training.json", training)
-
-    # ====================== BAR (Hər +1-də dolacaq) ======================
     def build_bar(guild, current):
         bar = ""
         for i in range(10):
-            if i < current:
-                # Dolmuş hissə
-                if i == 0:
-                    emoji_name = "PL_barsol"
-                elif i == 9:
-                    emoji_name = "PL_barsag"
-                else:
-                    emoji_name = "PL_bar"
+            is_filled = i < current
+            if i == 0:
+                emoji_name = "LL_dolubarsol" if is_filled else "LL_bosbarsol"
+            elif i == 9:
+                emoji_name = "LL_dolubarsag" if is_filled else "LL_bosbarsag"
             else:
-                # Boş hissə
-                if i == 0:
-                    emoji_name = "PL_bosbarsol"
-                elif i == 9:
-                    emoji_name = "PL_bosbarsaf"
-                else:
-                    emoji_name = "PL_bosbarorta"
-            
+                emoji_name = "LL_dolubarorta" if is_filled else "LL_bosbarorta"
             emoji = discord.utils.get(guild.emojis, name=emoji_name)
             if emoji:
                 bar += f"<:{emoji.name}:{emoji.id}>"
             else:
-                bar += "🟩" if i < current else "⬜"
-        
+                bar += "🟩" if is_filled else "⬜"
         return bar
-
     bar = build_bar(ctx.guild, ud["count"])
-
     embed = discord.Embed(
         title="⚽ Antrenman",
         color=0x00B300,
@@ -867,7 +843,6 @@ async def ant_cmd(ctx):
     )
     embed.set_footer(text="Premier Lig RP | Antrenman Sistemi")
     await ctx.reply(embed=embed)
-
     if ud["count"] == 10:
         notif_ch = ctx.guild.get_channel(CHANNELS["DEGER_BILDIRIM"])
         if notif_ch:
