@@ -1090,6 +1090,21 @@ async def ydver_cmd(ctx, target: discord.Member = None, amount: str = None, *, r
     if log_ch:
         await log_ch.send(embed=embed)
 
+@bot.command(name="şart", aliases=["sart", "şartlar", "kurallar"])
+async def sart_cmd(ctx):
+    embed = discord.Embed(
+        title="Premier Lig Sunucuya Girme Şartları",
+        color=0x00B300,
+        description=(
+            "🎟️ **çekiliş** Kanalındaki Tüm Çekilişlere Katılmak,\n"
+            "🎟️ **rol-al** Kanalından En Az 2 Rol Almak Ve\n"
+            "⚽ **oy-ver** Kanalından Sunucumuza Oy Vermektir.\n\n"
+            "**Lütfen Kayıt Yetkililerini Kandırmaya Çalışmayın!**"
+        )
+    )
+    embed.set_footer(text="Premier Lig RP")
+    await ctx.reply(embed=embed)
+
 @bot.command(name="mute")
 async def mute_cmd(ctx, target: discord.Member = None, duration_str: str = None, *, reason="Sebep belirtilmedi"):
     allowed = has_role(ctx.author, "MODERATOR") or has_role(ctx.author, "OWNER")
