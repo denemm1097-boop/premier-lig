@@ -825,13 +825,12 @@ async def ant_cmd(ctx):
 
     save_data("training.json", training)
 
-    # ==================== DÜZƏLDİLMİŞ PROGRESS BAR ====================
+    # ==================== PROGRESS BAR (Hər +1-də dolacaq) ====================
     def build_bar(guild, current, total):
-        # Emoji adlarını buradan yoxla, serverindəki emoji adları ilə eyni olsun
         emoji_map = {
             "emptyLeft":   "PL_bosbarsol",
             "emptyMiddle": "PL_bosbarorta",
-            "emptyRight":  "PL_bosbarsag",
+            "emptyRight":  "PL_bosbarsaf",
             "fullLeft":    "PL_barsol",
             "fullMiddle":  "PL_bar",
             "fullRight":   "PL_barsag",
@@ -841,16 +840,16 @@ async def ant_cmd(ctx):
             emoji = discord.utils.get(guild.emojis, name=name)
             if emoji:
                 return f"<:{emoji.name}:{emoji.id}>"
-            return "▬"  # emoji tapılmasa fallback
+            return "▬"  # emoji tapılmasa
 
         bar = ""
         for i in range(total):
-            is_full = i < current
-            if i == 0:  # Sol tərəf
+            is_full = i < current   # Hər +1-də bir hissə dolacaq
+            if i == 0:              # Sol baş
                 bar += get_emoji(emoji_map["fullLeft"] if is_full else emoji_map["emptyLeft"])
-            elif i == total - 1:  # Sağ tərəf
+            elif i == total - 1:    # Sağ baş
                 bar += get_emoji(emoji_map["fullRight"] if is_full else emoji_map["emptyRight"])
-            else:  # Orta hissələr
+            else:                   # Orta hissələr
                 bar += get_emoji(emoji_map["fullMiddle"] if is_full else emoji_map["emptyMiddle"])
         return bar
 
