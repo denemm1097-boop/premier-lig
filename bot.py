@@ -201,27 +201,12 @@ async def on_member_join(member: discord.Member):
     join_embed.add_field(name="📅 Katılım", value=f"<t:{int(time.time())}:R>", inline=True)
     join_embed.add_field(name="👥 Sunucu Üye Sayısı", value=str(guild.member_count), inline=True)
 
-    # ✅ Ping content-də olmalıdır, embed-də deyil
+    # ✅ DÜZELTME: Artık sadece 1 mesaj atılıyor
     await kayit_channel.send(
         content=f"<@&{ROLES['KAYIT_YETKILISI']}>",
         embed=join_embed,
         view=view
     )
-
-    join_embed = discord.Embed(
-        title="🆕 Yeni Üye Katıldı!",
-        color=0x00B300,
-        description=(
-            f"**{member.mention}** sunucuya katıldı!\n\n"
-            f"<@&{ROLES['KAYIT_YETKILISI']}> — Kaydı üstlen ve işlemi tamamla."
-        )
-    )
-    join_embed.set_thumbnail(url=member.display_avatar.url)
-    join_embed.add_field(name="👤 Kullanıcı", value=f"{member.mention} ({member})", inline=True)
-    join_embed.add_field(name="📅 Katılım", value=f"<t:{int(time.time())}:R>", inline=True)
-    join_embed.add_field(name="👥 Sunucu Üye Sayısı", value=str(guild.member_count), inline=True)
-
-    await kayit_channel.send(embed=join_embed, view=view)
 
 
 @bot.event
@@ -388,22 +373,24 @@ async def on_interaction(interaction: discord.Interaction):
             entry = pending.get(user_id)
             if not entry:
                 return await interaction.response.send_message("❌ Bu kayıt artık geçerli değil.", ephemeral=True)
-            if entry["claimedBy"]:
+            if entry.get("claimedBy"):
                 return await interaction.response.send_message(f"❌ Bu kayıt zaten <@{entry['claimedBy']}> tarafından üstlenildi.", ephemeral=True)
 
             entry["claimedBy"] = member.id
             entry["claimedAt"] = int(time.time() * 1000)
             save_data("pendingRegistrations.json", pending)
 
+            # 5 dakikada otomatik serbest bırakma
             async def expire_task():
-                await asyncio.sleep(600)
+                await asyncio.sleep(300)  # 5 dakika
                 fresh = load_data("pendingRegistrations.json")
                 e = fresh.get(user_id)
-                if e and e["claimedBy"] == member.id and not e["registered"]:
-                    del fresh[user_id]
+                if e and e.get("claimedBy") == member.id and not e.get("registered"):
+                    e["claimedBy"] = None
+                    e.pop("claimedAt", None)
                     save_data("pendingRegistrations.json", fresh)
                     try:
-                        await member.send("⚠️ Üstlendiğin kullanıcının kaydını 10 dakika içinde yapmadığın için kayıt boşa düştü.")
+                        await member.send(f"⚠️ Üstlendiğin kayıt (**{e.get('userTag')}**) 5 dakika içinde tamamlanmadığı için serbest bırakıldı.")
                     except Exception:
                         pass
             asyncio.create_task(expire_task())
@@ -413,7 +400,7 @@ async def on_interaction(interaction: discord.Interaction):
                 color=0x00B300,
                 description=(
                     f"<@{user_id}> kullanıcısının kaydı **{member.display_name}** tarafından üstlenildi.\n\n"
-                    "10 dakika içinde `.k <isim>` komutuyla kayıt yapılmalıdır."
+                    "5 dakika içinde `.k <isim>` komutuyla kayıt yapılmalıdır."
                 )
             )
             return await interaction.response.edit_message(embed=embed, view=None)
@@ -429,7 +416,7 @@ async def on_interaction(interaction: discord.Interaction):
 
             pending = load_data("pendingRegistrations.json")
             claimed = next(
-                (e for e in pending.values() if e["userId"] == int(target_id) and e["claimedBy"] == member.id and not e["registered"]),
+                (e for e in pending.values() if e["userId"] == int(target_id) and e.get("claimedBy") == member.id and not e.get("registered")),
                 None
             )
             if not claimed:
@@ -494,7 +481,7 @@ async def on_interaction(interaction: discord.Interaction):
                 await log_ch.send(embed=log_embed)
             return
 
-        # ── Ban onay/iptal ──
+        # Ban onay/iptal
         if cid.startswith("ban_onayla_"):
             if not has_role(member, "BOT_COMMANDER") and not has_role(member, "OWNER"):
                 return await interaction.response.send_message("❌ Yetersiz yetki.", ephemeral=True)
@@ -518,7 +505,7 @@ async def on_interaction(interaction: discord.Interaction):
             embed = discord.Embed(color=0x808080, description="❌ Ban işlemi iptal edildi.")
             return await interaction.response.edit_message(embed=embed, view=None)
 
-        # ── Kick onay/iptal ──
+        # Kick onay/iptal
         if cid.startswith("kick_onayla_"):
             if not has_role(member, "BOT_COMMANDER") and not has_role(member, "OWNER"):
                 return await interaction.response.send_message("❌ Yetersiz yetki.", ephemeral=True)
@@ -542,7 +529,7 @@ async def on_interaction(interaction: discord.Interaction):
             embed = discord.Embed(color=0x808080, description="❌ Kick işlemi iptal edildi.")
             return await interaction.response.edit_message(embed=embed, view=None)
 
-        # ── KAP butonları ──
+        # KAP butonları
         if cid in ("kap_transfer", "kap_uzatma", "kap_fesh"):
             allowed = has_role(member, "TEKNIK_DIREKTOR") or has_role(member, "TAKIM_KAPTANI") or has_role(member, "OWNER")
             if not allowed:
@@ -1062,7 +1049,6 @@ async def ydver_cmd(ctx, target: discord.Member = None, amount: str = None, *, r
         return await ctx.reply("❌ Geçerli bir miktar girin (pozitif tam sayı).")
 
     nick = target.display_name
-    # Hem 16M€ hem 16.5M€ formatını destekliyor
     match = re.search(r"(\d+(?:\.\d+)?)M€", nick)
     if not match:
         return await ctx.reply(f"❌ **{nick}** kullanıcısının isminde değer formatı bulunamadı (örn: `16M€` veya `16.5M€`).")
@@ -1089,6 +1075,7 @@ async def ydver_cmd(ctx, target: discord.Member = None, amount: str = None, *, r
     log_ch = ctx.guild.get_channel(CHANNELS["DEGER_LOG"])
     if log_ch:
         await log_ch.send(embed=embed)
+
 @bot.command(name="şart", aliases=["sart", "şartlar", "kurallar"])
 async def sart_cmd(ctx):
     embed = discord.Embed(
