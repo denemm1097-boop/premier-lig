@@ -825,11 +825,11 @@ async def ant_cmd(ctx):
         for i in range(10):
             is_filled = i < current
             if i == 0:
-                emoji_name = "LL_dolubarsol" if is_filled else "LL_bosbarsol"
+                emoji_name = "PL_barsol" if is_filled else "PL_bosbarsol"
             elif i == 9:
-                emoji_name = "LL_dolubarsag" if is_filled else "LL_bosbarsag"
+                emoji_name = "PL_barsag" if is_filled else "PL_bosbarsag"
             else:
-                emoji_name = "LL_dolubarorta" if is_filled else "LL_bosbarorta"
+                emoji_name = "PL_bar" if is_filled else "PL_bosbarorta"
             emoji = discord.utils.get(guild.emojis, name=emoji_name)
             if emoji:
                 bar += f"<:{emoji.name}:{emoji.id}>"
