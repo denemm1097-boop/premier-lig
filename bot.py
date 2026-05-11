@@ -793,7 +793,7 @@ async def sunucu_cmd(ctx):
 @bot.command(name="ant")
 async def ant_cmd(ctx):
     import time
-    COOLDOWN_MS = 60 * 60 * 1000  # 1 saat
+    COOLDOWN_MS = 60 * 60 * 1000
     MAX_SESSIONS = 10
 
     if ctx.channel.id != CHANNELS["ANTRENMAN"]:
@@ -816,42 +816,40 @@ async def ant_cmd(ctx):
         mins = (remaining + 59_999) // 60_000
         return await ctx.reply(f"⏱️ Antrenman için **{mins} dakika** daha beklemelisin.")
 
-    # Sayı artır
     ud["count"] += 1
     ud["lastUsed"] = now
-
     if ud["count"] > MAX_SESSIONS:
         ud["count"] = 1
 
     save_data("training.json", training)
 
-    # ==================== PROGRESS BAR (Hər +1-də dolacaq) ====================
+    # ====================== SADƏLƏŞDİRİLMİŞ BAR ======================
     def build_bar(guild, current, total):
-        emoji_map = {
-            "emptyLeft":   "PL_bosbarsol",
-            "emptyMiddle": "PL_bosbarorta",
-            "emptyRight":  "PL_bosbarsaf",
-            "fullLeft":    "PL_barsol",
-            "fullMiddle":  "PL_bar",
-            "fullRight":   "PL_barsag",
-        }
+        # Emoji adlarını buradan dəyişə bilərsən
+        full = "<:PL_barsol:> <:PL_bar:> <:PL_barsag:>"
+        empty = "<:PL_bosbarsol:> <:PL_bosbarorta:> <:PL_bosbarsaf:>"
 
-        def get_emoji(name):
-            emoji = discord.utils.get(guild.emojis, name=name)
-            if emoji:
-                return f"<:{emoji.name}:{emoji.id}>"
-            return "▬"  # emoji tapılmasa
+        # 1-ci antrenmanda heç dolmasın istəyirsənsə current-1 yaz, normal olsun istəyirsənsə current yaz
+        filled = current   # ← buranı current-1 etmək istəsən dəyiş
 
-        bar = ""
+        bar_parts = []
         for i in range(total):
-            is_full = i < current   # Hər +1-də bir hissə dolacaq
-            if i == 0:              # Sol baş
-                bar += get_emoji(emoji_map["fullLeft"] if is_full else emoji_map["emptyLeft"])
-            elif i == total - 1:    # Sağ baş
-                bar += get_emoji(emoji_map["fullRight"] if is_full else emoji_map["emptyRight"])
-            else:                   # Orta hissələr
-                bar += get_emoji(emoji_map["fullMiddle"] if is_full else emoji_map["emptyMiddle"])
-        return bar
+            if i < filled:
+                if i == 0:
+                    bar_parts.append("<:PL_barsol:>")
+                elif i == total - 1:
+                    bar_parts.append("<:PL_barsag:>")
+                else:
+                    bar_parts.append("<:PL_bar:>")
+            else:
+                if i == 0:
+                    bar_parts.append("<:PL_bosbarsol:>")
+                elif i == total - 1:
+                    bar_parts.append("<:PL_bosbarsaf:>")
+                else:
+                    bar_parts.append("<:PL_bosbarorta:>")
+
+        return "".join(bar_parts)
 
     bar = build_bar(ctx.guild, ud["count"], MAX_SESSIONS)
 
@@ -867,18 +865,13 @@ async def ant_cmd(ctx):
     embed.set_footer(text="Premier Lig RP | Antrenman Sistemi")
     await ctx.reply(embed=embed)
 
-    # 10/10 bildirimi
     if ud["count"] == MAX_SESSIONS:
         notif_ch = ctx.guild.get_channel(CHANNELS["DEGER_BILDIRIM"])
         if notif_ch:
             notif_embed = discord.Embed(
                 title="🏆 10/10 Antrenman Tamamlandı!",
                 color=0xFFD700,
-                description=(
-                    f"<@&{ROLES['DEGER_YETKILISI']}> dikkat!\n\n"
-                    f"**{ctx.author.mention}** kullanıcısı **10/10 antrenman** tamamladı!\n"
-                    "Değer güncellemesi yapabilirsiniz."
-                )
+                description=f"<@&{ROLES['DEGER_YETKILISI']}> dikkat!\n\n**{ctx.author.mention}** kullanıcısı **10/10 antrenman** tamamladı!\nDeğer güncellemesi yapabilirsiniz."
             )
             await notif_ch.send(embed=notif_embed)
         ud["count"] = 0
