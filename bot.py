@@ -1096,9 +1096,9 @@ async def sart_cmd(ctx):
         title="Premier Lig Sunucuya Girme Şartları",
         color=0x00B300,
         description=(
-            "🎟️ **çekiliş** Kanalındaki Tüm Çekilişlere Katılmak,\n"
-            "🎟️ **rol-al** Kanalından En Az 2 Rol Almak Ve\n"
-            "⚽ **oy-ver** Kanalından Sunucumuza Oy Vermektir.\n\n"
+            "**#çekiliş** Kanalındaki Tüm Çekilişlere Katılmak,\n"
+            "**#rol-al** Kanalından En Az 2 Rol Almak Ve\n"
+            "**#oy-ver** Kanalından Sunucumuza Oy Vermektir.\n\n"
             "**Lütfen Kayıt Yetkililerini Kandırmaya Çalışmayın!**"
         )
     )
