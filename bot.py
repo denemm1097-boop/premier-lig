@@ -820,14 +820,14 @@ async def ant_cmd(ctx):
     ud["count"] += 1
     ud["lastUsed"] = now
 
-    # 10'dan sonra sıfırla
     if ud["count"] > MAX_SESSIONS:
         ud["count"] = 1
 
     save_data("training.json", training)
 
-    # Progress Bar
+    # ==================== DÜZƏLDİLMİŞ PROGRESS BAR ====================
     def build_bar(guild, current, total):
+        # Emoji adlarını buradan yoxla, serverindəki emoji adları ilə eyni olsun
         emoji_map = {
             "emptyLeft":   "PL_bosbarsol",
             "emptyMiddle": "PL_bosbarorta",
@@ -836,19 +836,22 @@ async def ant_cmd(ctx):
             "fullMiddle":  "PL_bar",
             "fullRight":   "PL_barsag",
         }
+
         def get_emoji(name):
-            e = discord.utils.get(guild.emojis, name=name)
-            return f"<:{e.name}:{e.id}>" if e else "▓"
+            emoji = discord.utils.get(guild.emojis, name=name)
+            if emoji:
+                return f"<:{emoji.name}:{emoji.id}>"
+            return "▬"  # emoji tapılmasa fallback
 
         bar = ""
         for i in range(total):
-            full = i < current
-            if i == 0:
-                bar += get_emoji(emoji_map["fullLeft"] if full else emoji_map["emptyLeft"])
-            elif i == total - 1:
-                bar += get_emoji(emoji_map["fullRight"] if full else emoji_map["emptyRight"])
-            else:
-                bar += get_emoji(emoji_map["fullMiddle"] if full else emoji_map["emptyMiddle"])
+            is_full = i < current
+            if i == 0:  # Sol tərəf
+                bar += get_emoji(emoji_map["fullLeft"] if is_full else emoji_map["emptyLeft"])
+            elif i == total - 1:  # Sağ tərəf
+                bar += get_emoji(emoji_map["fullRight"] if is_full else emoji_map["emptyRight"])
+            else:  # Orta hissələr
+                bar += get_emoji(emoji_map["fullMiddle"] if is_full else emoji_map["emptyMiddle"])
         return bar
 
     bar = build_bar(ctx.guild, ud["count"], MAX_SESSIONS)
