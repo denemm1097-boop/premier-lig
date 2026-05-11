@@ -136,6 +136,7 @@ async def on_ready():
 @bot.event
 async def on_member_join(member: discord.Member):
     guild = member.guild
+    
     # Kayıtsız rolü ver
     kayitsiz_role = guild.get_role(ROLES["KAYITSIZ"])
     if kayitsiz_role:
@@ -167,7 +168,7 @@ async def on_member_join(member: discord.Member):
     except Exception:
         pass
 
-    # Kayıt kanalına bildir
+    # Kayıt kanalına bildir (DÜZƏLDİLMİŞ VERSİYA)
     kayit_channel = guild.get_channel(CHANNELS["KAYIT_BILDIRIM"])
     if not kayit_channel:
         return
@@ -1096,15 +1097,27 @@ async def sart_cmd(ctx):
         title="Premier Lig Sunucuya Girme Şartları",
         color=0x00B300,
         description=(
-            "**#çekiliş** Kanalındaki Tüm Çekilişlere Katılmak,\n"
-            "**#rol-al** Kanalından En Az 2 Rol Almak Ve\n"
-            "**#oy-ver** Kanalından Sunucumuza Oy Vermektir.\n\n"
+            "🎟️ **çekiliş** Kanalındaki Tüm Çekilişlere Katılmak,\n"
+            "🎟️ **rol-al** Kanalından En Az 2 Rol Almak Ve\n"
+            "⚽ **oy-ver** Kanalından Sunucumuza Oy Vermektir.\n\n"
             "**Lütfen Kayıt Yetkililerini Kandırmaya Çalışmayın!**"
         )
     )
-    embed.set_footer(text="Premier Lig RP")
+    
+    # Tıklanabilir kanallar
+    embed.add_field(
+        name="📌 Gerekli Kanallar",
+        value=(
+            f"<#{1502434459352301568}> — Çekiliş Kanalı\n"
+            f"<#{1502434445662359733}> — Rol-Al Kanalı\n"
+            f"<#{1502434443963400302}> — Oy-Ver Kanalı"
+        ),
+        inline=False
+    )
+    
+    embed.set_footer(text="Premier Lig RP • Giriş Şartları")
     await ctx.reply(embed=embed)
-
+    
 @bot.command(name="mute")
 async def mute_cmd(ctx, target: discord.Member = None, duration_str: str = None, *, reason="Sebep belirtilmedi"):
     allowed = has_role(ctx.author, "MODERATOR") or has_role(ctx.author, "OWNER")
