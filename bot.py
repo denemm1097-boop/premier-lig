@@ -816,68 +816,66 @@ async def ant_cmd(ctx):
         mins = (remaining + 59_999) // 60_000
         return await ctx.reply(f"⏱️ Antrenman için **{mins} dakika** daha beklemelisin.")
 
+    # Antrenman sayını artır
     ud["count"] += 1
     ud["lastUsed"] = now
+
     if ud["count"] > MAX_SESSIONS:
         ud["count"] = 1
 
     save_data("training.json", training)
 
-    # ====================== DÜZGÜN PROGRESS BAR ======================
-    def build_bar(guild, current, total):
-        emoji_map = {
-            "emptyLeft":   "PL_bosbarsol",
-            "emptyMiddle": "PL_bosbarorta",
-            "emptyRight":  "PL_bosbarsaf",
-            "fullLeft":    "PL_barsol",
-            "fullMiddle":  "PL_bar",
-            "fullRight":   "PL_barsag",
-        }
-
-        def get_emoji(name):
-            emoji = discord.utils.get(guild.emojis, name=name)
-            if emoji:
-                return f"<:{emoji.name}:{emoji.id}>"
-            return "▬"  # əgər emoji tapılmasa
-
+    # ====================== BAR (Hər +1-də dolacaq) ======================
+    def build_bar(guild, current):
         bar = ""
-        for i in range(total):
-            is_full = i < current
-            if i == 0:  # Sol
-                bar += get_emoji(emoji_map["fullLeft"] if is_full else emoji_map["emptyLeft"])
-            elif i == total - 1:  # Sağ
-                bar += get_emoji(emoji_map["fullRight"] if is_full else emoji_map["emptyRight"])
-            else:  # Orta
-                bar += get_emoji(emoji_map["fullMiddle"] if is_full else emoji_map["emptyMiddle"])
+        for i in range(10):
+            if i < current:
+                # Dolmuş hissə
+                if i == 0:
+                    emoji_name = "PL_barsol"
+                elif i == 9:
+                    emoji_name = "PL_barsag"
+                else:
+                    emoji_name = "PL_bar"
+            else:
+                # Boş hissə
+                if i == 0:
+                    emoji_name = "PL_bosbarsol"
+                elif i == 9:
+                    emoji_name = "PL_bosbarsaf"
+                else:
+                    emoji_name = "PL_bosbarorta"
+            
+            emoji = discord.utils.get(guild.emojis, name=emoji_name)
+            if emoji:
+                bar += f"<:{emoji.name}:{emoji.id}>"
+            else:
+                bar += "🟩" if i < current else "⬜"
+        
         return bar
 
-    bar = build_bar(ctx.guild, ud["count"], MAX_SESSIONS)
+    bar = build_bar(ctx.guild, ud["count"])
 
     embed = discord.Embed(
         title="⚽ Antrenman",
         color=0x00B300,
         description=(
             f"**{ctx.author.display_name}** antrenman yaptı!\n\n"
-            f"**İlerleme:** {ud['count']}/{MAX_SESSIONS}\n\n"
+            f"**İlerleme:** {ud['count']}/10\n\n"
             f"{bar}"
         )
     )
     embed.set_footer(text="Premier Lig RP | Antrenman Sistemi")
     await ctx.reply(embed=embed)
 
-    if ud["count"] == MAX_SESSIONS:
+    if ud["count"] == 10:
         notif_ch = ctx.guild.get_channel(CHANNELS["DEGER_BILDIRIM"])
         if notif_ch:
-            notif_embed = discord.Embed(
+            await notif_ch.send(embed=discord.Embed(
                 title="🏆 10/10 Antrenman Tamamlandı!",
                 color=0xFFD700,
-                description=(
-                    f"<@&{ROLES['DEGER_YETKILISI']}> dikkat!\n\n"
-                    f"**{ctx.author.mention}** kullanıcısı **10/10 antrenman** tamamladı!\n"
-                    "Değer güncellemesi yapabilirsiniz."
-                )
-            )
-            await notif_ch.send(embed=notif_embed)
+                description=f"<@&{ROLES['DEGER_YETKILISI']}> dikkat!\n\n**{ctx.author.mention}** 10/10 antrenman tamamladı!\nDeğer güncellemesi yapabilirsiniz."
+            ))
         ud["count"] = 0
         save_data("training.json", training)
 
