@@ -793,7 +793,7 @@ async def sunucu_cmd(ctx):
 @bot.command(name="ant")
 async def ant_cmd(ctx):
     import time
-    COOLDOWN_MS = 60 * 60 * 1000
+    COOLDOWN_MS = 60 * 60 * 1000  # 1 saat
     MAX_SESSIONS = 10
 
     if ctx.channel.id != CHANNELS["ANTRENMAN"]:
@@ -816,14 +816,17 @@ async def ant_cmd(ctx):
         mins = (remaining + 59_999) // 60_000
         return await ctx.reply(f"⏱️ Antrenman için **{mins} dakika** daha beklemelisin.")
 
-    if ud["count"] >= MAX_SESSIONS:
-        ud["count"] = 0
-
+    # Sayı artır
     ud["count"] += 1
     ud["lastUsed"] = now
+
+    # 10'dan sonra sıfırla
+    if ud["count"] > MAX_SESSIONS:
+        ud["count"] = 1
+
     save_data("training.json", training)
 
-    # Progress bar
+    # Progress Bar
     def build_bar(guild, current, total):
         emoji_map = {
             "emptyLeft":   "PL_bosbarsol",
@@ -849,17 +852,20 @@ async def ant_cmd(ctx):
         return bar
 
     bar = build_bar(ctx.guild, ud["count"], MAX_SESSIONS)
+
     embed = discord.Embed(
         title="⚽ Antrenman",
         color=0x00B300,
         description=(
             f"**{ctx.author.display_name}** antrenman yaptı!\n\n"
-            f"**İlerleme:** {ud['count']}/{MAX_SESSIONS}\n\n{bar}"
+            f"**İlerleme:** {ud['count']}/{MAX_SESSIONS}\n\n"
+            f"{bar}"
         )
     )
     embed.set_footer(text="Premier Lig RP | Antrenman Sistemi")
     await ctx.reply(embed=embed)
 
+    # 10/10 bildirimi
     if ud["count"] == MAX_SESSIONS:
         notif_ch = ctx.guild.get_channel(CHANNELS["DEGER_BILDIRIM"])
         if notif_ch:
@@ -1090,28 +1096,27 @@ async def ydver_cmd(ctx, target: discord.Member = None, amount: str = None, *, r
     log_ch = ctx.guild.get_channel(CHANNELS["DEGER_LOG"])
     if log_ch:
         await log_ch.send(embed=embed)
-
 @bot.command(name="şart", aliases=["sart", "şartlar", "kurallar"])
 async def sart_cmd(ctx):
     embed = discord.Embed(
         title="Premier Lig Sunucuya Girme Şartları",
         color=0x00B300,
-        description=(
-            "🎟️ **çekiliş** Kanalındaki Tüm Çekilişlere Katılmak,\n"
-            "🎟️ **rol-al** Kanalından En Az 2 Rol Almak Ve\n"
-            "⚽ **oy-ver** Kanalından Sunucumuza Oy Vermektir.\n\n"
-            "**Lütfen Kayıt Yetkililerini Kandırmaya Çalışmayın!**"
-        )
+        description="Sunucuya kayıt olabilmek için aşağıdaki şartları yerine getirmeniz gerekmektedir:"
     )
     
-    # Tıklanabilir kanallar
     embed.add_field(
-        name="📌 Gerekli Kanallar",
+        name="📌 Gerekli İşlemler",
         value=(
-            f"<#{1502434459352301568}> — Çekiliş Kanalı\n"
-            f"<#{1502434445662359733}> — Rol-Al Kanalı\n"
-            f"<#{1502434443963400302}> — Oy-Ver Kanalı"
+            f"🎉 <#{1502434459352301568}> Kanalındaki **Tüm Çekilişlere** Katılmak\n"
+            f"🎭 <#{1502434445662359733}> Kanalından **En Az 2 Rol** Almak\n"
+            f"🗳️ <#{1502434443963400302}> Kanalından **Sunucuya Oy** Vermek"
         ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="⚠️ Önemli Uyarı",
+        value="**Lütfen Kayıt Yetkililerini Kandırmaya Çalışmayın!**",
         inline=False
     )
     
