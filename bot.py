@@ -823,33 +823,33 @@ async def ant_cmd(ctx):
 
     save_data("training.json", training)
 
-    # ====================== SADƏLƏŞDİRİLMİŞ BAR ======================
+    # ====================== DÜZGÜN PROGRESS BAR ======================
     def build_bar(guild, current, total):
-        # Emoji adlarını buradan dəyişə bilərsən
-        full = "<:PL_barsol:> <:PL_bar:> <:PL_barsag:>"
-        empty = "<:PL_bosbarsol:> <:PL_bosbarorta:> <:PL_bosbarsaf:>"
+        emoji_map = {
+            "emptyLeft":   "PL_bosbarsol",
+            "emptyMiddle": "PL_bosbarorta",
+            "emptyRight":  "PL_bosbarsaf",
+            "fullLeft":    "PL_barsol",
+            "fullMiddle":  "PL_bar",
+            "fullRight":   "PL_barsag",
+        }
 
-        # 1-ci antrenmanda heç dolmasın istəyirsənsə current-1 yaz, normal olsun istəyirsənsə current yaz
-        filled = current   # ← buranı current-1 etmək istəsən dəyiş
+        def get_emoji(name):
+            emoji = discord.utils.get(guild.emojis, name=name)
+            if emoji:
+                return f"<:{emoji.name}:{emoji.id}>"
+            return "▬"  # əgər emoji tapılmasa
 
-        bar_parts = []
+        bar = ""
         for i in range(total):
-            if i < filled:
-                if i == 0:
-                    bar_parts.append("<:PL_barsol:>")
-                elif i == total - 1:
-                    bar_parts.append("<:PL_barsag:>")
-                else:
-                    bar_parts.append("<:PL_bar:>")
-            else:
-                if i == 0:
-                    bar_parts.append("<:PL_bosbarsol:>")
-                elif i == total - 1:
-                    bar_parts.append("<:PL_bosbarsaf:>")
-                else:
-                    bar_parts.append("<:PL_bosbarorta:>")
-
-        return "".join(bar_parts)
+            is_full = i < current
+            if i == 0:  # Sol
+                bar += get_emoji(emoji_map["fullLeft"] if is_full else emoji_map["emptyLeft"])
+            elif i == total - 1:  # Sağ
+                bar += get_emoji(emoji_map["fullRight"] if is_full else emoji_map["emptyRight"])
+            else:  # Orta
+                bar += get_emoji(emoji_map["fullMiddle"] if is_full else emoji_map["emptyMiddle"])
+        return bar
 
     bar = build_bar(ctx.guild, ud["count"], MAX_SESSIONS)
 
@@ -871,7 +871,11 @@ async def ant_cmd(ctx):
             notif_embed = discord.Embed(
                 title="🏆 10/10 Antrenman Tamamlandı!",
                 color=0xFFD700,
-                description=f"<@&{ROLES['DEGER_YETKILISI']}> dikkat!\n\n**{ctx.author.mention}** kullanıcısı **10/10 antrenman** tamamladı!\nDeğer güncellemesi yapabilirsiniz."
+                description=(
+                    f"<@&{ROLES['DEGER_YETKILISI']}> dikkat!\n\n"
+                    f"**{ctx.author.mention}** kullanıcısı **10/10 antrenman** tamamladı!\n"
+                    "Değer güncellemesi yapabilirsiniz."
+                )
             )
             await notif_ch.send(embed=notif_embed)
         ud["count"] = 0
