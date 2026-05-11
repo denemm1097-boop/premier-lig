@@ -136,8 +136,8 @@ async def on_ready():
 @bot.event
 async def on_member_join(member: discord.Member):
     guild = member.guild
+    import time
     
-    # Kayıtsız rolü ver
     kayitsiz_role = guild.get_role(ROLES["KAYITSIZ"])
     if kayitsiz_role:
         try:
@@ -145,7 +145,6 @@ async def on_member_join(member: discord.Member):
         except Exception:
             pass
 
-    # DM gönder
     dm_embed = discord.Embed(
         title="⚽ Şanlı Premier Lig'e Hoş Geldin!",
         color=0x5865F2,
@@ -161,14 +160,12 @@ async def on_member_join(member: discord.Member):
     dm_embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
     dm_embed.add_field(name="📌 Sunucu", value=guild.name, inline=True)
     dm_embed.add_field(name="👥 Toplam Üye", value=str(guild.member_count), inline=True)
-    import time
     dm_embed.add_field(name="📅 Katılım", value=f"<t:{int(time.time())}:F>", inline=True)
     try:
         await member.send(embed=dm_embed)
     except Exception:
         pass
 
-    # Kayıt kanalına bildir (DÜZƏLDİLMİŞ VERSİYA)
     kayit_channel = guild.get_channel(CHANNELS["KAYIT_BILDIRIM"])
     if not kayit_channel:
         return
@@ -190,6 +187,26 @@ async def on_member_join(member: discord.Member):
     )
     view = discord.ui.View(timeout=None)
     view.add_item(button)
+
+    join_embed = discord.Embed(
+        title="🆕 Yeni Üye Katıldı!",
+        color=0x00B300,
+        description=(
+            f"**{member.mention}** sunucuya katıldı!\n\n"
+            f"Kaydı üstlen ve işlemi tamamla."
+        )
+    )
+    join_embed.set_thumbnail(url=member.display_avatar.url)
+    join_embed.add_field(name="👤 Kullanıcı", value=f"{member.mention} ({member})", inline=True)
+    join_embed.add_field(name="📅 Katılım", value=f"<t:{int(time.time())}:R>", inline=True)
+    join_embed.add_field(name="👥 Sunucu Üye Sayısı", value=str(guild.member_count), inline=True)
+
+    # ✅ Ping content-də olmalıdır, embed-də deyil
+    await kayit_channel.send(
+        content=f"<@&{ROLES['KAYIT_YETKILISI']}>",
+        embed=join_embed,
+        view=view
+    )
 
     join_embed = discord.Embed(
         title="🆕 Yeni Üye Katıldı!",
