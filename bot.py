@@ -811,7 +811,6 @@ async def sunucu_cmd(ctx):
     embed.set_footer(text="Premier Lig RP")
     await ctx.reply(embed=embed)
 
-
 @bot.command(name="ant")
 async def ant_cmd(ctx):
     import time
@@ -842,11 +841,11 @@ async def ant_cmd(ctx):
         for i in range(10):
             is_filled = i < current
             if i == 0:
-                emoji_name = "PL_barsol" if is_filled else "PL_bosbarsol"
+                emoji_name = "LL_dolubarsol" if is_filled else "LL_bosbarsol"
             elif i == 9:
-                emoji_name = "PL_barsag" if is_filled else "PL_bosbarsag"
+                emoji_name = "LL_dolubarsag" if is_filled else "LL_bosbarsag"
             else:
-                emoji_name = "PL_bar" if is_filled else "PL_bosbarorta"
+                emoji_name = "LL_dolubarorta" if is_filled else "LL_bosbarorta"
             emoji = discord.utils.get(guild.emojis, name=emoji_name)
             if emoji:
                 bar += f"<:{emoji.name}:{emoji.id}>"
