@@ -755,6 +755,11 @@ async def afk_cmd(ctx, *, reason="AFK"):
     )
     await ctx.reply(embed=embed)
 
+@bot.command(name="emojitest")
+async def emoji_test(ctx):
+    names = [e.name for e in ctx.guild.emojis if "bar" in e.name.lower() or "ll" in e.name.lower()]
+    await ctx.reply(f"Bulunan emojiler: {names}")
+
 
 @bot.command(name="snipe")
 async def snipe_cmd(ctx):
